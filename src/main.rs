@@ -1,9 +1,10 @@
-use std::fs;
 use std::path::Path;
 
 use cmd::parse_command_line;
+use search::search;
 
 mod cmd;
+mod search;
 
 // struct ExactFileNameMatcher<'a> {
 //     file_name: &'a str,
@@ -22,55 +23,26 @@ mod cmd;
 struct SearchOptions {
     name: String,
     path: String,
+    debug: bool,
+}
+
+fn dump_search_parameters(options: &SearchOptions) {
+    println!("name: {}", options.name);
+    println!("path: {}", options.path);
+    println!("debug: {}", options.debug);
 }
 
 fn main() {
     let options = parse_command_line();
+    if options.debug {
+        dump_search_parameters(&options);
+    }
 
     let mut results: Vec<String> = Vec::new();
     let path = Path::new(&options.path);
-    search2(&path, &options.name, &mut results);
+
+    search(&path, &options.name, &mut results);
     for result in results {
         println!("{:?}", result);
-    }
-}
-
-fn search(path: &Path, file_name: &str, results: &mut Vec<String>) {
-    let result = fs::read_dir(&path);
-    if let Ok(entries) = result {
-        for entry in entries {
-            if let Ok(entry) = entry {
-                let sub_path = entry.path();
-                if sub_path.is_dir() {
-                    let sub_path = Path::new(&sub_path);
-                    search(sub_path, file_name, results);
-                } else if sub_path.ends_with(file_name) {
-                    results.push(String::from(sub_path.as_os_str().to_str().unwrap()));
-                }
-            }
-        }
-    }
-}
-
-fn search2(path: &Path, file_name: &str, results: &mut Vec<String>) {
-    let result = fs::read_dir(&path);
-    if result.is_err() {
-        return;
-    }
-
-    let entries = result.unwrap();
-    for entry in entries {
-        if entry.is_err() {
-            continue;
-        }
-
-        let entry = entry.unwrap();
-        let sub_path = entry.path();
-        if sub_path.is_dir() {
-            let sub_path = Path::new(&sub_path);
-            search(sub_path, file_name, results);
-        } else if sub_path.ends_with(file_name) {
-            results.push(String::from(sub_path.as_os_str().to_str().unwrap()));
-        }
     }
 }
