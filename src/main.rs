@@ -1,9 +1,11 @@
 use std::path::Path;
 
 use cmd::parse_command_line;
-use search::search;
+use matchers::filenamematcher::FileNameMatcher;
+use search::search2;
 
 mod cmd;
+mod matchers;
 mod search;
 
 // struct ExactFileNameMatcher<'a> {
@@ -38,11 +40,9 @@ fn main() {
         dump_search_parameters(&options);
     }
 
-    let mut results: Vec<String> = Vec::new();
-    let path = Path::new(&options.path);
+    let path = Path::new(&options.path).to_path_buf();
 
-    search(&path, &options.name, &mut results);
-    for result in results {
-        println!("{:?}", result);
-    }
+    let filenamematcher = FileNameMatcher::new(options.name.clone());
+
+    search2(&path, &filenamematcher);
 }

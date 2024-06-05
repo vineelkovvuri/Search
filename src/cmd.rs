@@ -1,4 +1,4 @@
-use clap::{Arg, ArgAction, Command};
+use clap::{Arg, Command};
 
 use crate::SearchOptions;
 
@@ -30,7 +30,7 @@ pub fn parse_command_line() -> SearchOptions {
         .get_matches();
     let name = args.get_one::<String>("name").expect("name is expected");
     let path = args.get_one::<String>("path").expect("path is expected");
-    let debug = args.get_one::<bool>("debug").or_else(|| Some(&false)).unwrap();
+    let debug = args.get_one::<bool>("debug").unwrap_or(&false);
 
     SearchOptions {
         name: name.to_string(),
