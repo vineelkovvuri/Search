@@ -2,11 +2,40 @@ use clap::{Arg, Command};
 
 use crate::SearchOptions;
 
-fn parse_size_param(size: &str) -> (u64, u64) {
-    let mut sizes = size.split(',');
-    let min = sizes.next().unwrap_or("0").parse::<u64>().unwrap();
-    let max = sizes.next().unwrap_or("0").parse::<u64>().unwrap();
-    (min, max)
+fn convert_to_bytes(size_str: &str) -> Result<u64, String> {
+    let len = size_str.len();
+    if len <= 2 {
+        return Ok(size_str.parse::<u64>().unwrap_or(0));
+    }
+
+    let suffix = &size_str[len - 2..].to_ascii_uppercase();
+    let last = suffix.as_str();
+    let remaining = &size_str[..len - 2];
+
+    let multiplier = match last {
+        "KB" => 1024,
+        "MB" => 1024 * 1024,
+        "GB" => 1024 * 1024 * 1024,
+        "TB" => 1024 * 1024 * 1024 * 1024,
+        _ => 1,
+    };
+
+    remaining
+        .parse::<u64>()
+        .map(|rem| rem * multiplier)
+        .map_err(|_| format!("Failed to convert the {}", size_str))
+}
+
+fn parse_size_param(size_str: &str) -> Result<(u64, u64), String> {
+    let size_str = size_str.trim();
+    let mut splits = size_str.split(',');
+    let size_min_str = splits.next().or(Some("0"));
+    let size_max_str = splits.next().or(Some("0"));
+
+    let size_min_bytes = convert_to_bytes(size_min_str.unwrap().trim())?;
+    let size_max_bytes = convert_to_bytes(size_max_str.unwrap().trim())?;
+
+    Ok((size_min_bytes, size_max_bytes))
 }
 
 pub fn parse_command_line() -> SearchOptions {
@@ -31,7 +60,7 @@ pub fn parse_command_line() -> SearchOptions {
             Arg::new("size")
                 .short('s')
                 .long("size")
-                .help("Size to search"),
+                .help("Size of the file to search. Specified as -s \"10MB,20MB\""),
         )
         .arg(
             Arg::new("debug")
@@ -43,15 +72,27 @@ pub fn parse_command_line() -> SearchOptions {
 
     let name = matches.get_one::<String>("name").map(|v| v.to_string());
     let path = matches.get_one::<String>("path").map(|v| v.to_string());
-    let debug = matches.get_one::<bool>("debug").unwrap_or(&false);
-    let (size_min, size_max) =
-        parse_size_param(matches.get_one::<String>("size").unwrap_or(&"".to_string()));
+    let debug = matches.get_one::<bool>("debug").copied();
+    let size_str = matches.get_one::<String>("size").map(|v| v.as_str());
+    let size = parse_size_param(size_str.unwrap_or("0,0")).ok();
 
     SearchOptions {
         name,
         path,
-        debug: *debug,
-        size_min: Some(size_min),
-        size_max: Some(size_max),
+        debug,
+        size,
     }
+}
+
+#[test]
+fn size_str_test() {
+    assert_eq!(parse_size_param("10KB,20KB"), Ok((10 * 1024, 20 * 1024)));
+    assert_eq!(parse_size_param("10KB, 20KB"), Ok((10 * 1024, 20 * 1024)));
+    assert_eq!(
+        parse_size_param("10KB,  20KB  "),
+        Ok((10 * 1024, 20 * 1024))
+    );
+    assert_eq!(parse_size_param(", 20KB"), Ok((0, 20 * 1024)));
+    assert_eq!(parse_size_param("10KB,"), Ok((10 * 1024, 0)));
+    assert_eq!(parse_size_param("10KB,20KB"), Ok((10 * 1024, 20 * 1024)));
 }
