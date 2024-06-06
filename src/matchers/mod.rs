@@ -1,6 +1,8 @@
 use std::fs::DirEntry;
 
 pub mod filenamematcher;
+pub mod filesizematcher;
+
 
 pub enum Traverse {
     Recurse,
