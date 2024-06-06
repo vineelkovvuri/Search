@@ -10,7 +10,7 @@ fn parse_size_param(size: &str) -> (u64, u64) {
 }
 
 pub fn parse_command_line() -> SearchOptions {
-    let args = Command::new("search")
+    let matches = Command::new("search")
         .version("1.0")
         .about("File search program")
         .author("Vineel Kovvuri")
@@ -40,15 +40,16 @@ pub fn parse_command_line() -> SearchOptions {
                 .help("Dump search parameters"),
         )
         .get_matches();
-    let name = args.get_one::<String>("name").expect("name is expected");
-    let path = args.get_one::<String>("path").expect("path is expected");
-    let debug = args.get_one::<bool>("debug").unwrap_or(&false);
+
+    let name = matches.get_one::<String>("name").map(|v| v.to_string());
+    let path = matches.get_one::<String>("path").map(|v| v.to_string());
+    let debug = matches.get_one::<bool>("debug").unwrap_or(&false);
     let (size_min, size_max) =
-        parse_size_param(args.get_one::<String>("size").unwrap_or(&"".to_string()));
+        parse_size_param(matches.get_one::<String>("size").unwrap_or(&"".to_string()));
 
     SearchOptions {
-        name: Some(name.to_string()),
-        path: Some(path.to_string()),
+        name,
+        path,
         debug: *debug,
         size_min: Some(size_min),
         size_max: Some(size_max),
