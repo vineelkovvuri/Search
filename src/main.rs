@@ -2,7 +2,7 @@ use std::path::Path;
 
 use cmd::parse_command_line;
 use matchers::{filenamematcher::FileNameMatcher, filesizematcher::FileSizeMatcher};
-use search::search2;
+use search::traverse;
 
 mod cmd;
 mod matchers;
@@ -32,9 +32,9 @@ fn main() {
 
     if options.name.is_some() {
         let matcher = FileNameMatcher::new(options.name.as_ref().unwrap().clone());
-        search2(&path, &matcher);
+        traverse(&path, &matcher);
     } else if options.size.is_some() {
         let matcher = FileSizeMatcher::new(options.size.unwrap());
-        search2(&path, &matcher);
+        traverse(&path, &matcher);
     }
 }
