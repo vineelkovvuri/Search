@@ -4,6 +4,7 @@ use chrono::{DateTime, Datelike, Local};
 
 use super::{Matcher, Traverse};
 
+#[derive(Debug)]
 pub struct FileDate(pub u16, pub u16, pub u16);
 pub struct FileDateMatcher {
     date_range: (FileDate, FileDate),
@@ -31,7 +32,7 @@ impl FileDateMatcher {
         let date = [date.year() as u32, date.month(), date.day()];
 
         for i in 0..3 {
-            if date_min[i] < date[i] && date[i] < date_max[i] {
+            if date_min[i] <= date[i] && date[i] <= date_max[i] {
                 continue;
             } else {
                 return false;

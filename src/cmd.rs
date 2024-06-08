@@ -122,10 +122,18 @@ pub fn parse_command_line() -> SearchOptions {
     let name = matches.get_one::<String>("name").map(|v| v.to_string());
     let path = matches.get_one::<String>("path").map(|v| v.to_string());
     let debug = matches.get_one::<bool>("debug").copied();
+
     let size_str = matches.get_one::<String>("size").map(|v| v.as_str());
-    let size = parse_size_param(size_str.unwrap_or("0,0")).ok();
-    let date_str = matches.get_one::<String>("size").map(|v| v.as_str());
-    let date = parse_date_param(date_str.unwrap_or("0000-00-00,0000-00-00")).ok();
+    let mut size = None;
+    if size_str.is_some() {
+        size = parse_size_param(size_str.unwrap_or("0,0")).ok();
+    }
+
+    let date_str = matches.get_one::<String>("date").map(|v| v.as_str());
+    let mut date = None;
+    if date_str.is_some() {
+        date = parse_date_param(date_str.unwrap_or("0000-00-00,0000-00-00")).ok();
+    }
 
     SearchOptions {
         name,

@@ -19,10 +19,11 @@ struct SearchOptions {
 }
 
 fn dump_search_parameters(options: &SearchOptions) {
-    println!("name: {}", options.name.as_ref().unwrap_or(&"".to_string()));
-    println!("path: {}", options.path.as_ref().unwrap_or(&"".to_string()));
-    println!("size: {:?}", options.size.unwrap_or((0, 0)));
-    println!("debug: {}", options.debug.as_ref().unwrap_or(&false));
+    println!("name: {:?}", options.name);
+    println!("path: {:?}", options.path);
+    println!("size: {:?}", options.size);
+    println!("date: {:?}", options.date);
+    println!("debug: {:?}", options.debug);
 }
 
 fn main() {
