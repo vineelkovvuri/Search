@@ -1,6 +1,7 @@
 use std::fs::DirEntry;
 
 pub mod filenamematcher;
+pub mod filedatematcher;
 pub mod filesizematcher;
 
 

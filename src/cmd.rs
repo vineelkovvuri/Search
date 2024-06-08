@@ -1,6 +1,49 @@
 use clap::{Arg, Command};
 
-use crate::SearchOptions;
+use crate::{matchers::filedatematcher::FileDate, SearchOptions};
+
+fn parse_date_param(date_str: &str) -> Result<(FileDate, FileDate), String> {
+    let date_str = date_str.trim();
+    let mut splits = date_str.split(',');
+    let date_from_str = splits.next().ok_or("Failed to parse the date string")?;
+    let date_to_str = splits.next().ok_or("Failed to parse the date string")?;
+
+    let splits: Vec<&str> = date_from_str.split('-').collect();
+    if splits.len() != 3 {
+        return Err("Input string not in correct format".to_string());
+    }
+
+    let year_from = splits[0]
+        .parse::<u64>()
+        .map_err(|_| "Input string not in correct format")? as u16;
+    let month_from = splits[1]
+        .parse::<u64>()
+        .map_err(|_| "Input string not in correct format")? as u16;
+    let day_from = splits[2]
+        .parse::<u64>()
+        .map_err(|_| "Input string not in correct format")? as u16;
+
+    let splits: Vec<&str> = date_to_str.split('-').collect();
+    if splits.len() != 3 {
+        return Err("Input string not in correct format".to_string());
+    }
+
+    let year_to = splits[0]
+        .parse::<u64>()
+        .map_err(|_| "Input string not in correct format")? as u16;
+    let month_to = splits[1]
+        .parse::<u64>()
+        .map_err(|_| "Input string not in correct format")? as u16;
+    let day_to = splits[2]
+        .parse::<u64>()
+        .map_err(|_| "Input string not in correct format")? as u16;
+
+    // DateTime::parse_from_str(date_from_str, "%Y-%m-%d")
+    Ok((
+        FileDate(year_from, month_from, day_from),
+        FileDate(year_to, month_to, day_to),
+    ))
+}
 
 fn convert_to_bytes(size_str: &str) -> Result<u64, String> {
     let len = size_str.len();
@@ -63,8 +106,14 @@ pub fn parse_command_line() -> SearchOptions {
                 .help("Size of the file to search. Specified as -s \"10MB,20MB\""),
         )
         .arg(
-            Arg::new("debug")
+            Arg::new("date")
                 .short('d')
+                .long("date")
+                .help("Date of the file to search. Specified as -s \"2024-01-20,2024-03-22\""),
+        )
+        .arg(
+            Arg::new("debug")
+                .short('x')
                 .required(false)
                 .help("Dump search parameters"),
         )
@@ -75,12 +124,15 @@ pub fn parse_command_line() -> SearchOptions {
     let debug = matches.get_one::<bool>("debug").copied();
     let size_str = matches.get_one::<String>("size").map(|v| v.as_str());
     let size = parse_size_param(size_str.unwrap_or("0,0")).ok();
+    let date_str = matches.get_one::<String>("size").map(|v| v.as_str());
+    let date = parse_date_param(date_str.unwrap_or("0000-00-00,0000-00-00")).ok();
 
     SearchOptions {
         name,
         path,
         debug,
         size,
+        date,
     }
 }
 

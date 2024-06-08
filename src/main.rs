@@ -1,7 +1,9 @@
 use std::path::Path;
 
 use cmd::parse_command_line;
-use matchers::{filenamematcher::FileNameMatcher, filesizematcher::FileSizeMatcher};
+use matchers::{
+    filedatematcher::{FileDate, FileDateMatcher}, filenamematcher::FileNameMatcher, filesizematcher::FileSizeMatcher,
+};
 use search::traverse;
 
 mod cmd;
@@ -13,6 +15,7 @@ struct SearchOptions {
     path: Option<String>,
     debug: Option<bool>,
     size: Option<(u64, u64)>,
+    date: Option<(FileDate, FileDate)>,
 }
 
 fn dump_search_parameters(options: &SearchOptions) {
@@ -35,6 +38,9 @@ fn main() {
         traverse(&path, &matcher);
     } else if options.size.is_some() {
         let matcher = FileSizeMatcher::new(options.size.unwrap());
+        traverse(&path, &matcher);
+    } else if options.date.is_some() {
+        let matcher = FileDateMatcher::new(options.date.unwrap());
         traverse(&path, &matcher);
     }
 }
