@@ -1,6 +1,6 @@
 use std::{fs, path::PathBuf};
 
-use crate::matchers::{Matcher, Traverse};
+use crate::matchers::{Matcher};
 
 pub fn traverse<M>(path: &PathBuf, matcher: &M)
 where
@@ -8,11 +8,10 @@ where
 {
     if let Ok(entries) = fs::read_dir(path) {
         for entry in entries.flatten() {
-            match matcher.process(&entry) {
-                Traverse::Recurse => {
-                    traverse(&entry.path(), matcher);
-                }
-                Traverse::NoRecurse => {}
+            let _ = matcher.process(&entry);
+            let path = entry.path();
+            if path.is_dir() {
+                traverse(&entry.path(), matcher);
             }
         }
     }

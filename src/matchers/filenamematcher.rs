@@ -1,6 +1,6 @@
 use std::fs::DirEntry;
 
-use super::{Matcher, Traverse};
+use super::Matcher;
 
 pub struct FileNameMatcher {
     file_name: String,
@@ -13,16 +13,11 @@ impl FileNameMatcher {
 }
 
 impl Matcher for FileNameMatcher {
-    fn process(&self, entry: &DirEntry) -> Traverse {
+    fn process(&self, entry: &DirEntry) -> bool {
         let path = entry.path();
-
-        if path.is_dir() {
-            Traverse::Recurse
-        } else {
-            if path.ends_with(&self.file_name) {
-                println!("{:?}", path.to_str().unwrap());
-            }
-            Traverse::NoRecurse
+        if path.is_file() && path.ends_with(&self.file_name) {
+            return true;
         }
+        false
     }
 }

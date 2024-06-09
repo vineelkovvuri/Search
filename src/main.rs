@@ -2,7 +2,10 @@ use std::path::Path;
 
 use cmd::parse_command_line;
 use matchers::{
-    filedatematcher::{FileDate, FileDateMatcher}, filenamematcher::FileNameMatcher, filesizematcher::FileSizeMatcher,
+    filedatematcher::{FileDate, FileDateMatcher},
+    filenamematcher::FileNameMatcher,
+    filesizematcher::FileSizeMatcher,
+    Matcher, MatcherPipeline,
 };
 use search::traverse;
 
@@ -34,14 +37,15 @@ fn main() {
 
     let path = Path::new(options.path.as_ref().unwrap()).to_path_buf();
 
+    let mut matchers = Vec::<Box<dyn Matcher>>::new();
     if options.name.is_some() {
-        let matcher = FileNameMatcher::new(options.name.as_ref().unwrap().clone());
-        traverse(&path, &matcher);
+        matchers.push(Box::new(FileNameMatcher::new(options.name.unwrap())));
     } else if options.size.is_some() {
-        let matcher = FileSizeMatcher::new(options.size.unwrap());
-        traverse(&path, &matcher);
+        matchers.push(Box::new(FileSizeMatcher::new(options.size.unwrap())));
     } else if options.date.is_some() {
-        let matcher = FileDateMatcher::new(options.date.unwrap());
-        traverse(&path, &matcher);
+        matchers.push(Box::new(FileDateMatcher::new(options.date.unwrap())));
     }
+
+    let matcher_pipeline = MatcherPipeline::new(matchers);
+    traverse(&path, &matcher_pipeline);
 }

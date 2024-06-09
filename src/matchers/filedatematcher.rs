@@ -2,7 +2,7 @@ use std::{fs::DirEntry, time::SystemTime};
 
 use chrono::{DateTime, Datelike, Local};
 
-use super::{Matcher, Traverse};
+use super::Matcher;
 
 #[derive(Debug)]
 pub struct FileDate(pub u16, pub u16, pub u16);
@@ -44,19 +44,18 @@ impl FileDateMatcher {
 }
 
 impl Matcher for FileDateMatcher {
-    fn process(&self, entry: &DirEntry) -> Traverse {
+    fn process(&self, entry: &DirEntry) -> bool {
         let path = entry.path();
-
-        if path.is_dir() {
-            Traverse::Recurse
-        } else {
+        if path.is_file() {
             if let Ok(metadata) = path.metadata() {
                 let date = metadata.created().unwrap();
                 if self.date_in_range(date) {
-                    println!("{:?}", path.to_str().unwrap());
+                    // println!("{:?}", path.to_str().unwrap());
+                    return true;
                 }
             }
-            Traverse::NoRecurse
         }
+
+        false
     }
 }
